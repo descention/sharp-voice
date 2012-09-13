@@ -21,7 +21,8 @@ namespace SharpVoice
 	    String pass = null;
 	    String authToken = null;
 		String settingsPath = "sharpVoice.xml";
-
+		private CookieCollection cookies = new CookieCollection();
+        private CookieContainer cookiejar = new CookieContainer();
         /*
 		 * Links Imported from https://pygooglevoice.googlecode.com/hg/googlevoice/settings.py
 		 * Made to be more compatible with porting future python code.
@@ -44,6 +45,7 @@ namespace SharpVoice
 
         Dictionary<string, string> dict = new Dictionary<string, string>(){
             {"BASE","https://www.google.com/voice/"},
+            {"RNRSE","https://accounts.google.com/ServiceLogin?service=grandcentral&continue=https://www.google.com/voice/&followup=https://www.google.com/voice/&ltmpl=open"},
     		{"LOGIN","https://www.google.com/accounts/ClientLogin"},
             {"LOGOUT",BASE + "account/signout"},
     		{"INBOX",BASE + "#inbox"},
@@ -149,37 +151,49 @@ namespace SharpVoice
             return makeRequest(dict["XML_SMS"])[0];
 	    }
 		#endregion
-        /*
-        private String get(String urlString){
-		    string result = null;
 
-            WebResponse response = null;
-            StreamReader reader = null;
+		public Dictionary<string,string> get_post_vars()
+        {
+            Dictionary<string,string> Post_Vars = new Dictionary<string,string>(){};
+            HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(dict["BASE"]);
+            request.CookieContainer = cookiejar;
+            request.Method = "GET";
+            request.UserAgent = "sharpVoice / 0.1";
 
-            try
-            {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(urlString + "?auth=" + authToken);
-                request.Method = "GET";
-                response = request.GetResponse();
-                reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                result = reader.ReadToEnd();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.StackTrace);
-                throw new IOException(ex.Message);
-            }
-            finally
-            {
-                if (reader != null)
-                    reader.Close();
-                if (response != null)
-                    response.Close();
-            }
-		    return result;
-	    }
-        */
 
+            WebResponse answer = request.GetResponse();
+            cookiejar = request.CookieContainer;
+
+            StreamReader reader = new StreamReader(answer.GetResponseStream(), Encoding.UTF8);
+            string response = reader.ReadToEnd();
+            response = response.Replace("\n", "");
+            
+
+            MatchCollection vars = Regex.Matches(response, "name=['\"](.*?)['\"].*?(value=['\"](.*?)['\"]|>)", RegexOptions.Multiline);
+            int num_matches = vars.Count;
+            string name = "";
+            string value = "";
+            for (int i = 0; i < num_matches; i++)
+            {
+                //clear
+                name = "";
+                value = "";
+
+                //set
+                name = vars[i].Groups[1].ToString().Trim();
+                value = vars[i].Groups[3].ToString().Trim();
+
+                /*/trim trailing " or '
+                name = name.Remove(name.Length - 1, 1);
+                value = value.Remove(value.Length - 1, 1);
+                */
+                if (!Post_Vars.ContainsKey(name))
+                    Post_Vars.Add(name, value);
+            }
+
+            return Post_Vars;
+        }
+		
         /// <summary>
         /// Login with and email address and password.  Retrieve the auth and __rnr_se keys.
         /// </summary>
@@ -189,39 +203,21 @@ namespace SharpVoice
             if (pass == null)
 				throw new IOException("No Pass Defined");
             
-            Dictionary<string, string> loginData = new Dictionary<string, string>()
-            {
-                {"accountType","GOOGLE"},
-                {"Email",user},
-                {"Passwd",pass},
-                {"service","grandcentral"},
-                {"source",source}
-            };
-
-			string[] response = makeRequest("login", loginData);
-			//Console.WriteLine(response);
-			string[] stringSeparators = new string[] { "=" };
-
-			Console.WriteLine("======");
-			foreach (string line in response)
-			{
-				Console.WriteLine(line);
-				Console.WriteLine("======");
-				if (line.Contains("Auth="))
-				{
-					this.authToken = line.Split(stringSeparators, 2, StringSplitOptions.None)[1].Trim();
-					Console.WriteLine("AUTH TOKEN =" + this.authToken);
-				}
-				else if (line.Contains("Error="))
-				{
-					throw new IOException(line);
-				}
-			}
+            Dictionary<string, string> loginData = get_post_vars();
             
-		    if (this.authToken == null) {
-			    throw new IOException("No Authorization Received.");
-		    }
-			if (rnrSEE == null)
+            if (loginData.ContainsKey("Email"))
+                loginData["Email"] = user;
+            else
+                loginData.Add("Email", user);
+
+            if (loginData.ContainsKey("Passwd"))
+                loginData["Passwd"] = pass;
+            else
+                loginData.Add("Passwd", pass);
+            
+            rnrSEE = get_rnrse(makeRequest("rnrse",loginData)[0]);
+			
+			if (string.IsNullOrEmpty(rnrSEE))
 			{
 				try
 				{
@@ -260,6 +256,13 @@ namespace SharpVoice
 				throw new IOException();
 			}
 		}
+		
+		public string get_rnrse(string t)
+        {
+            t = t.Replace("\n", "");
+            Match m = Regex.Match(t, "<input.*?name=[\'\"]_rnr_se[\'\"].*?(value=[\'\"](.*?)[\'\"]|/>)");
+            return m.Groups[2].ToString().Trim();
+        }
 
         public string call(string callTo, string callFrom){
             return call(callTo, callFrom, "undefined");
@@ -284,9 +287,17 @@ namespace SharpVoice
                 {"phoneNumber",destinationNumber},
                 {"text",txt}
             };
-
+			
             return this.makeRequest("sms", smsData)[0];
 	    }
+		
+		public string markSMS(string smsID, bool read){
+			Dictionary<string,string> data = new Dictionary<string, string>();
+			data.Add("_msgID", smsID);
+			data.Add("read",read.ToString());
+			
+			return this.makeRequest("mark",data)[0];
+		}
 
         private string[] makeRequest(string page){
             return makeRequest(page, null);
@@ -309,23 +320,21 @@ namespace SharpVoice
             StreamReader reader = null;
             String dataString = "";
 
-            if (page.ToUpper() != "LOGIN")
-            {
-                url += "?auth=" + authToken;
-            }
-
             try
             {
                 
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                 request.UserAgent = @"sharpVoice / 0.1";
+                request.CookieContainer = cookiejar;
+                
                 if (data != null)
                 {
                     if (data is Dictionary<string, string>)
                     {
                         Dictionary<string,string> dicdata = (Dictionary<string,string>)data;
                         //Dictionary<string, string> temp = new Dictionary<string, string>();
-                        dicdata.Add("_rnr_se", rnrSEE);
+                        if(!string.IsNullOrEmpty(this.rnrSEE))
+                        	dicdata.Add("_rnr_se", rnrSEE);
                         
                         foreach (KeyValuePair<string, string> h in dicdata)
                         {
@@ -358,6 +367,12 @@ namespace SharpVoice
                     }
                 }
                 response = request.GetResponse();
+                
+                if (request.CookieContainer != null)
+                {
+                    cookiejar = request.CookieContainer;
+                }
+                
                 reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
                 if (page.ToUpper() != "LOGIN")
                 {
@@ -398,7 +413,7 @@ namespace SharpVoice
 			//https://www.google.com/voice/media/send_voicemail/[voicemail id]
 			// still working on this...
 			// 
-			return "";
+			throw new NotImplementedException();
 		}
 
 	}
@@ -514,13 +529,14 @@ namespace SharpVoice
 				//Download the message MP3 (if any). Saves files to adir (defaults to current directory). Message hashes can be found in self.voicemail().messages for example. Returns location of saved file.
 			}
 
-			public void Mark(){
-				Mark(true);
+			public void MarkRead(){
+				MarkRead(true);
 			}
 
-			public void Mark(bool read)
+			public void MarkRead(bool read)
 			{
 				//Mark this message as read. Use message.mark(0) to mark it as unread.
+				
 			}
 			
 			public void Star()
