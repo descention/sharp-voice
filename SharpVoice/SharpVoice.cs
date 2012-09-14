@@ -13,14 +13,12 @@ using System.Configuration;
 
 namespace SharpVoice
 {
-    class Voice
+    public class Voice
     {   
-        public String rnrSEE = null;
+        private String rnrSEE = null;
 	    String source = null;
 	    String user = null;
 	    String pass = null;
-	    String authToken = null;
-		String settingsPath = "sharpVoice.xml";
 		private CookieCollection cookies = new CookieCollection();
         private CookieContainer cookiejar = new CookieContainer();
         /*
@@ -33,9 +31,9 @@ namespace SharpVoice
         //string[] FEEDS = new String[]{"inbox", "starred", "all", "spam", "trash", "voicemail", "sms",
         //        "recorded", "placed", "received", "missed"};
 
-        public Util.Folder inbox;
-        public Util.Folder starred;
-        public Util.Folder all;
+        public Folder inbox;
+        public Folder starred;
+        public Folder all;
         //continue for each FEED
 
 		
@@ -152,7 +150,7 @@ namespace SharpVoice
 	    }
 		#endregion
 
-		public Dictionary<string,string> get_post_vars()
+		private Dictionary<string,string> get_post_vars()
         {
             Dictionary<string,string> Post_Vars = new Dictionary<string,string>(){};
             HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(dict["BASE"]);
@@ -419,143 +417,6 @@ namespace SharpVoice
 	}
 	
 	namespace Util{
-		class Folder
-		{//Folder wrapper for feeds from Google Voice
-			int totalSize;//(aka __len__)
-			Dictionary<string,int> unreadCounts;
-			int resultsPerPage;
-			List<Message> messages;//list of Message instances
-
-			public Folder(Voice v, string name, string data){
-				//Folder(voice, name, data)
-			}
-
-			public List<Message> Messages()
-			{//Returns a list of all messages in this folder
-				return messages;
-			}
-		}
-		
-		class Phone
-		{// Wrapper for phone objects used for phone specific methods
-			int id;
-			string phoneNumber;// i18n phone number
-			string formattedNumber;// humanized phone number string
-			//data dictionary? we;
-			//data dictionary? wd;
-			bool verified;
-			string name;
-			bool smsEndabled;
-			bool scheduleSet;
-			int policyBitmask;
-			//List weekdayTimes;
-			//dEPRECATEDDisabled: bool
-			bool weekdayAllDay;
-			//bool telephonyVerified;
-			//List weekendTimes
-			bool active;
-			bool weekendAllDay;
-			bool enabledForOthers;
-			int type;// (1 - Home, 2 - Mobile, 3 - Work, 4 - Gizmo)
-
-			
-			public Phone(Voice v, string data){
-				//Phone(voice, data)
-			}
-
-			public void Disable()
-			{
-				//disables phone
-			}
-
-			public void Enable()
-			{
-				//enables phone
-			}
-
-			public string toString()
-			{
-				return phoneNumber;
-			}
-		}
-		
-		class Message{
-			//Wrapper for all call/sms message instances stored in Google Voice Attributes are:
-
-			string id;//SHA1 identifier
-			bool isTrash;
-			//displayStartDateTime: datetime
-			bool star;
-			bool isSpam;
-			//startTime: gmtime
-			List<string> labels;
-			// displayStartTime: time
-			string children;
-			string note;
-			bool isRead;
-			string displayNumber;
-			string relativeStartTime;
-			string phoneNumber;
-			int type;
-			
-			public Message(string folder, int id, string data)
-			{
-				//Message(folder, id, data)
-				/*
-				def __init__(self, voice, name, data):
-					self.voice = voice
-					self.name = name
-					super(AttrDict, self).__init__(data)
-				*/
-			}
-			
-			public void Delete()
-			{
-				Delete(true);
-			}
-
-			public void Delete(bool trash)
-			{
-				//Moves this message to the Trash. Use message.delete(0) to move it out of the Trash.
-			}
-
-			public void Download()
-			{
-				Download(Environment.CurrentDirectory);
-			}
-
-			public void Download(string adir)
-			{
-				//Download the message MP3 (if any). Saves files to adir (defaults to current directory). Message hashes can be found in self.voicemail().messages for example. Returns location of saved file.
-			}
-
-			public void MarkRead(){
-				MarkRead(true);
-			}
-
-			public void MarkRead(bool read)
-			{
-				//Mark this message as read. Use message.mark(0) to mark it as unread.
-				
-			}
-			
-			public void Star()
-			{
-				Star(true);
-			}
-
-			public void Star(bool star)
-			{
-				//Star this message. Use message.star(0) to unstar it.
-			}
-
-			public string toString()
-			{
-				return id;
-			}
-
-		}
-
 		class XMLParser{
 			/*
 			class SharpVoice.util.XMLParser(voice, name, datafunc)¶

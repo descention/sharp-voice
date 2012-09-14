@@ -1,0 +1,5 @@
+C:\Documents and Settings\smundorff\My Documents\Dropbox\Projects\sharp-voice\SharpVoice\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\smundorff\My Documents\Dropbox\Projects\sharp-voice\SharpVoice\bin\Debug\SharpVoice.dll
+C:\Documents and Settings\smundorff\My Documents\Dropbox\Projects\sharp-voice\SharpVoice\bin\Debug\SharpVoice.pdb
+C:\Documents and Settings\smundorff\My Documents\Dropbox\Projects\sharp-voice\SharpVoice\obj\Debug\SharpVoice.dll
+C:\Documents and Settings\smundorff\My Documents\Dropbox\Projects\sharp-voice\SharpVoice\obj\Debug\SharpVoice.pdb
