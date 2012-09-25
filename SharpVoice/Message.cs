@@ -1,29 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using System.Runtime.Serialization;
 
 namespace SharpVoice
 {
+    [DataContract]
     public class Message
     {
         //Wrapper for all call/sms message instances stored in Google Voice Attributes are:
 
-        string id;//SHA1 identifier
-        bool isTrash;
-        //displayStartDateTime: datetime
-        bool star;
-        bool isSpam;
-        //startTime: gmtime
-        List<string> labels;
-        // displayStartTime: time
-        string children;
-        string note;
-        bool isRead;
-        string displayNumber;
-        string relativeStartTime;
-        string phoneNumber;
-        int type;
+        public Message() { }
 
         public Message(string folder, int id, string data)
         {
@@ -64,23 +51,66 @@ namespace SharpVoice
         public void MarkRead(bool read)
         {
             //Mark this message as read. Use message.mark(0) to mark it as unread.
-
+            
         }
 
-        public void Star()
+        public override string ToString()
         {
-            Star(true);
+            return ID;
         }
 
-        public void Star(bool star)
-        {
-            //Star this message. Use message.star(0) to unstar it.
-        }
+        [DataMember(Name = "id")]
+        public string ID { get; set; }
 
-        public string toString()
-        {
-            return id;
-        }
+        [DataMember]
+        public string phoneNumber { get; set; }
 
+        [DataMember]
+        public string displayNumber { get; set; }
+
+        [DataMember]
+        public string startTime { get; set; }
+
+        [DataMember]
+        public string displayStartDateTime { get; set; }
+
+        [DataMember]
+        public string displayStartTime { get; set; }
+
+        [DataMember]
+        public string relativeStartTime { get; set; }
+
+        [DataMember]
+        public string note { get; set; }
+
+        [DataMember]
+        public bool isRead { get; set; }
+
+        [DataMember]
+        public bool isSpam { get; set; }
+
+        [DataMember]
+        public bool isTrash { get; set; }
+
+        [DataMember(Name = "star")]
+        public bool Star { get; set; }
+
+        [DataMember]
+        public string messageText { get; set; }
+
+        [DataMember]
+        public string[] labels { get; set; }
+
+        [DataMember]
+        public bool hasMp3 { get; set; }
+
+        [DataMember]
+        public int duration { get; set; }
+
+        [DataMember]
+        public string type { get; set; }
+
+        [DataMember]
+        public string children { get; set; }
     }
 }

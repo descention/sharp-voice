@@ -1,26 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Net;
 using System.Web;
-using System.Diagnostics;
-using System.Media;
 using System.Xml;
-using System.Configuration;
+using System.Runtime.Serialization;
+using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace SharpVoice
 {
     public class Voice
     {   
-        private String rnrSEE = null;
-	    String source = null;
+        private static String rnrSEE = null;
 	    String user = null;
 	    String pass = null;
-		private CookieCollection cookies = new CookieCollection();
-        private CookieContainer cookiejar = new CookieContainer();
+		private static CookieCollection cookies = new CookieCollection();
+        private static CookieContainer cookiejar = new CookieContainer();
+
+        
+
         /*
 		 * Links Imported from https://pygooglevoice.googlecode.com/hg/googlevoice/settings.py
 		 * Made to be more compatible with porting future python code.
@@ -31,17 +32,10 @@ namespace SharpVoice
         //string[] FEEDS = new String[]{"inbox", "starred", "all", "spam", "trash", "voicemail", "sms",
         //        "recorded", "placed", "received", "missed"};
 
-        public Folder inbox;
-        public Folder starred;
-        public Folder all;
-        //continue for each FEED
-
-		
-
 		const string BASE = "https://www.google.com/voice/";
         const string XML_RECENT = BASE + "inbox/recent/";
 
-        Dictionary<string, string> dict = new Dictionary<string, string>(){
+        public static Dictionary<string, string> dict = new Dictionary<string, string>(){
             {"BASE","https://www.google.com/voice/"},
             {"RNRSE","https://accounts.google.com/ServiceLogin?service=grandcentral&continue=https://www.google.com/voice/&followup=https://www.google.com/voice/&ltmpl=open"},
     		{"LOGIN","https://www.google.com/accounts/ClientLogin"},
@@ -71,41 +65,25 @@ namespace SharpVoice
     		{"XML_RECEIVED",XML_RECENT + "received/"},
     		{"XML_MISSED",XML_RECENT + "missed/"}
         };
-        
-
-        public Voice()
-        {
-            //ConfigurationManager.AppSettings[""] = "";
-        }
 
         /// <summary>
-        /// Set email address and password.
+        /// Login with email address and password
         /// </summary>
         /// <param name="user">Email address for account</param>
         /// <param name="pass">Password for account</param>
 		public Voice(string user, string pass)
 		{
+            if (!string.IsNullOrEmpty(rnrSEE))
+                Logout();
 			this.user = user;
 			this.pass = pass;
+            this.Login();
 		}
-
-
-        /// <summary>
-        /// provide login information and rnr_se key. Login immediately.
-        /// </summary>
-        /// <param name="user"></param>
-        /// <param name="pass"></param>
-        /// <param name="source"></param>
-        /// <param name="rnrSee"></param>
-		public Voice(String user, String pass, String source, String rnrSee){
-
-		    this.user = user;
-		    this.pass = pass;
-		    this.rnrSEE = rnrSee;
-		    this.source = source;
-
-		    login();
-	    }
+		
+		~Voice(){
+			Logout();
+		}
+		
 		/*
 		inbox - Recent, unread messages
 		starred - Starred messages
@@ -121,51 +99,80 @@ namespace SharpVoice
 		*/
 
 		#region java translated functions
-        public String getInbox(){
-            return makeRequest(dict["xml_inbox"])[0];
+        private String getInbox(){
+            return Request("xml_inbox");
 	    }
+
+        Folder _inbox;
+
+        public Folder Inbox
+        {
+            get
+            {
+                if (_inbox == null || _inbox.NeedsUpdate)
+                {
+                    string inbox = this.getInbox();
+                    XmlDocument xd = new XmlDocument();
+                    xd.LoadXml(inbox);
+                    string json = xd.SelectSingleNode("//response/json").InnerText;
+
+                    _inbox = JsonConvert.DeserializeObject<Folder>(json);
+                    _inbox.LastUpdate = DateTime.Now;
+                }
+                return _inbox;
+            }
+        }
+
 	    public String getStarred(){
-            return makeRequest(dict["XML_STARRED"])[0];
+            return Request("XML_STARRED");
 	    }
 	    public String getRecent(){
-            return makeRequest(dict["XML_ALL"])[0];
+            return Request("XML_ALL");
 	    }
 	    public String getSpam(){
-            return makeRequest(dict["XML_SPAM"])[0];
+        	return Request("XML_SPAM");
 	    }
 	    public String getRecorded(){
-            return makeRequest(dict["XML_RECORDED"])[0];
+            return Request("XML_RECORDED");
 	    }
 	    public String getPlaced(){
-            return makeRequest(dict["XML_PLACED"])[0];
+            return Request("XML_PLACED");
 	    }
 	    public String getReceived(){
-            return makeRequest(dict["XML_RECEIVED"])[0];
+            return Request("XML_RECEIVED");
 	    }
 	    public String getMissed(){
-            return makeRequest(dict["XML_MISSED"])[0];
+            return Request("XML_MISSED");
 	    }
-	    public String getSMS(){
-            return makeRequest(dict["XML_SMS"])[0];
+	    private String getSMS(){
+            return Request("XML_SMS");
 	    }
+
+        Folder _sms;
+
+        public Folder SMS
+        {
+            get
+            {
+                if (_sms == null || _sms.NeedsUpdate)
+                {
+                    string box = this.getSMS();
+                    XmlDocument xd = new XmlDocument();
+                    xd.LoadXml(box);
+                    string json = xd.SelectSingleNode("//response/json").InnerText;
+                    _sms = JsonConvert.DeserializeObject<Folder>(json);
+                }
+                return _sms;
+            }
+        }
+
 		#endregion
 
 		private Dictionary<string,string> get_post_vars()
         {
             Dictionary<string,string> Post_Vars = new Dictionary<string,string>(){};
-            HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(dict["BASE"]);
-            request.CookieContainer = cookiejar;
-            request.Method = "GET";
-            request.UserAgent = "sharpVoice / 0.1";
-
-
-            WebResponse answer = request.GetResponse();
-            cookiejar = request.CookieContainer;
-
-            StreamReader reader = new StreamReader(answer.GetResponseStream(), Encoding.UTF8);
-            string response = reader.ReadToEnd();
+            string response = Request("base");
             response = response.Replace("\n", "");
-            
 
             MatchCollection vars = Regex.Matches(response, "name=['\"](.*?)['\"].*?(value=['\"](.*?)['\"]|>)", RegexOptions.Multiline);
             int num_matches = vars.Count;
@@ -195,11 +202,12 @@ namespace SharpVoice
         /// <summary>
         /// Login with and email address and password.  Retrieve the auth and __rnr_se keys.
         /// </summary>
-        public void login(){
+        private void Login(){
+            Debug.WriteLine("get:Login");
             if (user == null)
-				throw new IOException("No User Defined");
+				throw new InvalidOperationException("No email defined");
             if (pass == null)
-				throw new IOException("No Pass Defined");
+                throw new InvalidOperationException("No password defined");
             
             Dictionary<string, string> loginData = get_post_vars();
             
@@ -213,60 +221,36 @@ namespace SharpVoice
             else
                 loginData.Add("Passwd", pass);
             
-            rnrSEE = get_rnrse(makeRequest("rnrse",loginData)[0]);
+            rnrSEE = get_rnrse(Request("rnrse",loginData));
 			
 			if (string.IsNullOrEmpty(rnrSEE))
 			{
-				try
-				{
-					special();
-				}
-				catch
-				{
-					throw new IOException("No rnr key Defined");
-				}
+				throw new Exception("Could not login");
 			}
 	    }
 
         /// <summary>
         /// Deauth oneself with this method.
         /// </summary>
-		public void logout()
+		public void Logout()
 		{
-			makeRequest("logout");
+            Debug.WriteLine("get:Logout");
+			Request("logout");
 			rnrSEE = null;
 		}
-
-        /// <summary>
-        /// The method retrieves the __rnr_se value from the website so you don't have to.
-        /// </summary>
-		private void special()
-		{
-			Regex regex = new Regex("<input.*name=\"_rnr_se\".*value=\"(.*)\"/>",RegexOptions.None);
-			try
-			{
-                string t = makeRequest("base")[0];
-                MatchCollection m = regex.Matches(t);
-                rnrSEE = m[0].Result("$2");
-			}
-			catch
-			{
-				throw new IOException();
-			}
-		}
 		
-		public string get_rnrse(string t)
+		private string get_rnrse(string t)
         {
             t = t.Replace("\n", "");
             Match m = Regex.Match(t, "<input.*?name=[\'\"]_rnr_se[\'\"].*?(value=[\'\"](.*?)[\'\"]|/>)");
             return m.Groups[2].ToString().Trim();
         }
 
-        public string call(string callTo, string callFrom){
-            return call(callTo, callFrom, "undefined");
+        public string Call(string callTo, string callFrom){
+            return Call(callTo, callFrom, "undefined");
         }
 
-        public string call(String callTo, String callFrom, String subscriberNumber){
+        public string Call(String callTo, String callFrom, String subscriberNumber){
             Dictionary<string, string> callData = new Dictionary<string, string>(){
                 {"outgoingNumber",callTo},
                 {"forwardingNumber",callFrom},
@@ -275,10 +259,10 @@ namespace SharpVoice
                 {"phoneType","2"}
             };
 
-            return this.makeRequest("call", callData)[0];
+            return this.Request("call", callData);
 	    }
 
-        public string sendSMS(String destinationNumber, String txt){
+        public string SendSMS(String destinationNumber, String txt){
 		    
             Dictionary<string, string> smsData = new Dictionary<string, string>(){
                 //{"auth",authToken},
@@ -286,44 +270,37 @@ namespace SharpVoice
                 {"text",txt}
             };
 			
-            return this.makeRequest("sms", smsData)[0];
+            return this.Request("sms", smsData);
 	    }
 		
-		public string markSMS(string smsID, bool read){
+		public string markRead(string msgID, bool read){
 			Dictionary<string,string> data = new Dictionary<string, string>();
-			data.Add("_msgID", smsID);
-			data.Add("read",read.ToString());
+			data.Add("_msgID", msgID);
+			data.Add("read", read.ToString());
 			
-			return this.makeRequest("mark",data)[0];
+			return this.Request("mark",data);
 		}
 
-        private string[] makeRequest(string page){
-            return makeRequest(page, null);
-        }
-
-        private string[] makeRequest(string page, object data){
-            return makeRequest(page, data, null);
-        }
-
-        private string[] makeRequest(String page, object data, WebHeaderCollection headers)
+        internal object makeRequest(String page, object data)
         {
+            Debug.WriteLine("request:" + page);
             string url = dict[page.ToUpper()];
-
-            if (headers == null)
-                headers = new WebHeaderCollection();
-
-            List<string> result = new List<string>();
+            string dataString = "";
             
-            WebResponse response = null;
-            StreamReader reader = null;
-            String dataString = "";
+            if(data is string){
+	            if(page.ToUpper() == "DOWNLOAD")
+    	            url += data;
+            }
 
             try
             {
-                
+            	
+            	
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                 request.UserAgent = @"sharpVoice / 0.1";
                 request.CookieContainer = cookiejar;
+                
+                request.Method = "GET";
                 
                 if (data != null)
                 {
@@ -331,7 +308,7 @@ namespace SharpVoice
                     {
                         Dictionary<string,string> dicdata = (Dictionary<string,string>)data;
                         //Dictionary<string, string> temp = new Dictionary<string, string>();
-                        if(!string.IsNullOrEmpty(this.rnrSEE))
+                        if(!string.IsNullOrEmpty(Voice.rnrSEE))
                         	dicdata.Add("_rnr_se", rnrSEE);
                         
                         foreach (KeyValuePair<string, string> h in dicdata)
@@ -340,22 +317,13 @@ namespace SharpVoice
                             dataString += "&";
                         }
                         dataString.TrimEnd(new char[] { '&' });
+                        request.Method = "POST";
+                        request.ContentType = "application/x-www-form-urlencoded;charset=utf-8";
+                        request.ContentLength = dataString.Length;
                     }
-                    else
-                    {
-                        //dataString += data + 
-                    }
-                    request.Method = "POST";
-                    request.ContentType = "application/x-www-form-urlencoded;charset=utf-8";
                 }
-                else
-                {
-                    request.Method = "GET";
-                }
-                //request.Headers.Add(headers);
-
-                request.ContentLength = dataString.Length;
-                if (dataString.Length > 0)
+                
+                if (request.ContentLength > 0)
                 {
                     using (Stream writeStream = request.GetRequestStream())
                     {
@@ -364,95 +332,58 @@ namespace SharpVoice
                         writeStream.Write(bytes, 0, bytes.Length);
                     }
                 }
-                response = request.GetResponse();
-                
-                if (request.CookieContainer != null)
+
+                using (WebResponse response = request.GetResponse())
                 {
-                    cookiejar = request.CookieContainer;
-                }
-                
-                reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                if (page.ToUpper() != "LOGIN")
-                {
-                    result.Add(reader.ReadToEnd());
-                }
-                else
-                {
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
+                    //if (page.ToUpper() == "LOGOUT")
+                    //    return "";
+
+                    if (request.CookieContainer != null)
                     {
-                        result.Add(line);
+                        cookiejar = request.CookieContainer;
+                    }
+
+                    Stream s = response.GetResponseStream();
+
+                    switch(page.ToUpper()){
+                        default:
+                            using (StreamReader reader = new StreamReader(s, Encoding.UTF8))
+                                return reader.ReadToEnd();
+                        case "DOWNLOAD":
+                            MemoryStream m = new MemoryStream();
+                            byte[] buffer = new byte[1024];
+                            int bytesSize = 0;
+                            while ((bytesSize = s.Read(buffer, 0, buffer.Length)) > 0)
+                            {
+                                m.Write(buffer, 0, bytesSize);
+                            }
+                            return m.ToArray();
+                        case "LOGOUT":
+                            return "";
                     }
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.StackTrace);
-                Debug.WriteLine(ex.Data);
-                throw new IOException(ex.Message);
+                throw new Exception(ex.Message);
             }
-            finally
-            {
-                if (reader != null)
-                    reader.Close();
-                if (response != null)
-                    response.Close();
-            }
-
-            if (result.Equals(""))
-            {
-                throw new IOException("No Response Data Received.");
-            }
-
-            return result.ToArray();
+        }
+        
+        public string Request(string page){
+        	return Request(page, null);
+        }
+        
+        public string Request(string page, object data){
+        	return (string)makeRequest(page,data);
         }
 
-		private String saveVoicemail(string voiceID){
-			//https://www.google.com/voice/media/send_voicemail/[voicemail id]
-			// still working on this...
-			// 
-			throw new NotImplementedException();
+        public byte[] Download(string page, object data){
+            return (byte[])makeRequest(page,data);
+        }
+        
+		public void SaveVoicemail(string voiceID, string location){
+			File.WriteAllBytes(location,Download("download", voiceID));
 		}
 
-	}
-	
-	namespace Util{
-		class XMLParser{
-			/*
-			class SharpVoice.util.XMLParser(voice, name, datafunc)¶
-			XML Parser helper that can dig json and html out of the feeds. The parser takes a Voice instance, page name, and function to grab data from. Calling the parser calls the data function once, sets up the json and html attributes and returns a Folder instance for the given page:
-
-			>>> o = XMLParser(voice, 'voicemail', lambda: 'some xml payload')
-			>>> o()
-			... <Folder ...>
-			>>> o.json
-			... 'some json payload'
-			>>> o.data
-			... 'loaded json payload'
-			>>> o.html
-			... 'some html payload'
-			data
-			Returns the parsed json information after calling the XMLParser
-			folder
-			Returns associated Folder instance for given page (self.name)
-			*/
-			string json;
-			string html;
-			string data;
-
-			public XMLParser(Voice v, string name, string datafunc){
-				
-			}
-
-			public string Data()
-			{
-				return data;
-			}
-
-			public Folder Folder()
-			{
-				return null;
-			}
-		}
 	}
 }

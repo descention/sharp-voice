@@ -2,12 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Runtime.Serialization;
 
 namespace SharpVoice
 {
+    [DataContract]
     public class Phone
     {// Wrapper for phone objects used for phone specific methods
+        
+        [DataMember]
         int id;
+
+
         string phoneNumber;// i18n phone number
         string formattedNumber;// humanized phone number string
         //data dictionary? we;
