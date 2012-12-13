@@ -32,16 +32,18 @@
             this.loginEmail = new System.Windows.Forms.TextBox();
             this.loginPass = new System.Windows.Forms.MaskedTextBox();
             this.callGroup = new System.Windows.Forms.GroupBox();
-            this.callTo = new System.Windows.Forms.TextBox();
-            this.callFrom = new System.Windows.Forms.TextBox();
             this.callStart = new System.Windows.Forms.Button();
+            this.callFrom = new System.Windows.Forms.TextBox();
+            this.callTo = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.smsGroup = new System.Windows.Forms.GroupBox();
-            this.smsTo = new System.Windows.Forms.TextBox();
-            this.smsMsg = new System.Windows.Forms.TextBox();
-            this.smsChars = new System.Windows.Forms.Label();
             this.smsSend = new System.Windows.Forms.Button();
+            this.smsChars = new System.Windows.Forms.Label();
+            this.smsMsg = new System.Windows.Forms.TextBox();
+            this.smsTo = new System.Windows.Forms.TextBox();
+            this.listView1 = new System.Windows.Forms.ListView();
+            this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
             this.callGroup.SuspendLayout();
             this.smsGroup.SuspendLayout();
             this.SuspendLayout();
@@ -84,22 +86,6 @@
             this.callGroup.TabStop = false;
             this.callGroup.Text = "Call";
             // 
-            // callTo
-            // 
-            this.callTo.Location = new System.Drawing.Point(7, 20);
-            this.callTo.Name = "callTo";
-            this.callTo.Size = new System.Drawing.Size(135, 20);
-            this.callTo.TabIndex = 0;
-            this.callTo.Text = "To";
-            // 
-            // callFrom
-            // 
-            this.callFrom.Location = new System.Drawing.Point(7, 47);
-            this.callFrom.Name = "callFrom";
-            this.callFrom.Size = new System.Drawing.Size(135, 20);
-            this.callFrom.TabIndex = 1;
-            this.callFrom.Text = "From";
-            // 
             // callStart
             // 
             this.callStart.Location = new System.Drawing.Point(176, 29);
@@ -109,6 +95,22 @@
             this.callStart.Text = "Call";
             this.callStart.UseVisualStyleBackColor = true;
             this.callStart.Click += new System.EventHandler(this.callStart_Click);
+            // 
+            // callFrom
+            // 
+            this.callFrom.Location = new System.Drawing.Point(7, 47);
+            this.callFrom.Name = "callFrom";
+            this.callFrom.Size = new System.Drawing.Size(135, 20);
+            this.callFrom.TabIndex = 1;
+            this.callFrom.Text = "From";
+            // 
+            // callTo
+            // 
+            this.callTo.Location = new System.Drawing.Point(7, 20);
+            this.callTo.Name = "callTo";
+            this.callTo.Size = new System.Drawing.Size(135, 20);
+            this.callTo.TabIndex = 0;
+            this.callTo.Text = "To";
             // 
             // label1
             // 
@@ -142,32 +144,6 @@
             this.smsGroup.TabStop = false;
             this.smsGroup.Text = "SMS";
             // 
-            // smsTo
-            // 
-            this.smsTo.Location = new System.Drawing.Point(7, 20);
-            this.smsTo.Name = "smsTo";
-            this.smsTo.Size = new System.Drawing.Size(100, 20);
-            this.smsTo.TabIndex = 0;
-            this.smsTo.Text = "To";
-            // 
-            // smsMsg
-            // 
-            this.smsMsg.Location = new System.Drawing.Point(7, 47);
-            this.smsMsg.Multiline = true;
-            this.smsMsg.Name = "smsMsg";
-            this.smsMsg.Size = new System.Drawing.Size(254, 47);
-            this.smsMsg.TabIndex = 1;
-            this.smsMsg.TextChanged += new System.EventHandler(this.countChars);
-            // 
-            // smsChars
-            // 
-            this.smsChars.AutoSize = true;
-            this.smsChars.Location = new System.Drawing.Point(130, 23);
-            this.smsChars.Name = "smsChars";
-            this.smsChars.Size = new System.Drawing.Size(36, 13);
-            this.smsChars.TabIndex = 2;
-            this.smsChars.Text = "0/160";
-            // 
             // smsSend
             // 
             this.smsSend.Location = new System.Drawing.Point(186, 17);
@@ -178,11 +154,49 @@
             this.smsSend.UseVisualStyleBackColor = true;
             this.smsSend.Click += new System.EventHandler(this.smsSend_Click);
             // 
+            // smsChars
+            // 
+            this.smsChars.AutoSize = true;
+            this.smsChars.Location = new System.Drawing.Point(130, 23);
+            this.smsChars.Name = "smsChars";
+            this.smsChars.Size = new System.Drawing.Size(36, 13);
+            this.smsChars.TabIndex = 2;
+            this.smsChars.Text = "0/160";
+            // 
+            // smsMsg
+            // 
+            this.smsMsg.Location = new System.Drawing.Point(7, 47);
+            this.smsMsg.Multiline = true;
+            this.smsMsg.Name = "smsMsg";
+            this.smsMsg.Size = new System.Drawing.Size(254, 47);
+            this.smsMsg.TabIndex = 1;
+            this.smsMsg.TextChanged += new System.EventHandler(this.countChars);
+            // 
+            // smsTo
+            // 
+            this.smsTo.Location = new System.Drawing.Point(7, 20);
+            this.smsTo.Name = "smsTo";
+            this.smsTo.Size = new System.Drawing.Size(100, 20);
+            this.smsTo.TabIndex = 0;
+            this.smsTo.Text = "To";
+            // 
+            // listView1
+            // 
+            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader1});
+            this.listView1.Location = new System.Drawing.Point(286, 12);
+            this.listView1.Name = "listView1";
+            this.listView1.Size = new System.Drawing.Size(278, 246);
+            this.listView1.TabIndex = 7;
+            this.listView1.UseCompatibleStateImageBehavior = false;
+            this.listView1.View = System.Windows.Forms.View.Details;
+            // 
             // Visual
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(292, 270);
+            this.ClientSize = new System.Drawing.Size(576, 270);
+            this.Controls.Add(this.listView1);
             this.Controls.Add(this.smsGroup);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
@@ -217,5 +231,7 @@
         private System.Windows.Forms.Label smsChars;
         private System.Windows.Forms.TextBox smsMsg;
         private System.Windows.Forms.TextBox smsTo;
+        private System.Windows.Forms.ListView listView1;
+        private System.Windows.Forms.ColumnHeader columnHeader1;
     }
 }

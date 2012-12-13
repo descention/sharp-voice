@@ -12,7 +12,7 @@ using System.Diagnostics;
 
 namespace SharpVoice
 {
-    public class Voice
+    public class Voice : IDisposable
     {   
         private static String rnrSEE = null;
 	    String user = null;
@@ -38,7 +38,6 @@ namespace SharpVoice
         public static Dictionary<string, string> dict = new Dictionary<string, string>(){
             {"BASE","https://www.google.com/voice/"},
             {"RNRSE","https://accounts.google.com/ServiceLogin?service=grandcentral&continue=https://www.google.com/voice/&followup=https://www.google.com/voice/&ltmpl=open"},
-    		{"LOGIN","https://www.google.com/accounts/ClientLogin"},
             {"LOGOUT",BASE + "account/signout"},
     		{"INBOX",BASE + "#inbox"},
     		{"CALL",BASE + "call/connect/"},
@@ -277,7 +276,6 @@ namespace SharpVoice
 			Dictionary<string,string> data = new Dictionary<string, string>();
 			data.Add("_msgID", msgID);
 			data.Add("read", read.ToString());
-			
 			return this.Request("mark",data);
 		}
 
@@ -294,8 +292,6 @@ namespace SharpVoice
 
             try
             {
-            	
-            	
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                 request.UserAgent = @"sharpVoice / 0.1";
                 request.CookieContainer = cookiejar;
@@ -308,7 +304,7 @@ namespace SharpVoice
                     {
                         Dictionary<string,string> dicdata = (Dictionary<string,string>)data;
                         //Dictionary<string, string> temp = new Dictionary<string, string>();
-                        if(!string.IsNullOrEmpty(Voice.rnrSEE))
+                        if(!string.IsNullOrEmpty(rnrSEE))
                         	dicdata.Add("_rnr_se", rnrSEE);
                         
                         foreach (KeyValuePair<string, string> h in dicdata)
@@ -335,9 +331,6 @@ namespace SharpVoice
 
                 using (WebResponse response = request.GetResponse())
                 {
-                    //if (page.ToUpper() == "LOGOUT")
-                    //    return "";
-
                     if (request.CookieContainer != null)
                     {
                         cookiejar = request.CookieContainer;
@@ -385,5 +378,14 @@ namespace SharpVoice
 			File.WriteAllBytes(location,Download("download", voiceID));
 		}
 
-	}
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            this.Logout();
+        }
+
+        #endregion
+    }
 }

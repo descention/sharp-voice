@@ -19,15 +19,31 @@ namespace GoogleTests
 
         private void loginButton_Click(object sender, EventArgs e)
         {
-            voiceConnection = new Voice(loginEmail.Text, loginPass.Text);
-            voiceConnection.login();
-            callGroup.Enabled = true;
-            smsGroup.Enabled = true;
+            try
+            {
+                voiceConnection = new Voice(loginEmail.Text, loginPass.Text);
+                callGroup.Enabled = true;
+                smsGroup.Enabled = true;
+
+                Folder inbox = voiceConnection.SMS;
+                listView1.Groups.Add(Folder.SMS, "Inbox");
+                foreach (SharpVoice.Message msg in inbox.Messages)
+                {
+                    ListViewItem item = new ListViewItem(listView1.Groups[Folder.SMS]);
+                    item.Text = msg.displayNumber;
+                    listView1.Items.Add(item);
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void callStart_Click(object sender, EventArgs e)
         {
-            string response = voiceConnection.call(callTo.Text, callFrom.Text);
+            string response = voiceConnection.Call(callTo.Text, callFrom.Text);
             MessageBox.Show(response);
         }
 
@@ -38,7 +54,7 @@ namespace GoogleTests
 
         private void smsSend_Click(object sender, EventArgs e)
         {
-            string response = voiceConnection.sendSMS(smsTo.Text, smsMsg.Text);
+            string response = voiceConnection.SendSMS(smsTo.Text, smsMsg.Text);
             MessageBox.Show(response);
         }
     }

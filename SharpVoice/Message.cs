@@ -8,20 +8,7 @@ namespace SharpVoice
     [DataContract]
     public class Message
     {
-        //Wrapper for all call/sms message instances stored in Google Voice Attributes are:
-
-        public Message() { }
-
-        public Message(string folder, int id, string data)
-        {
-            //Message(folder, id, data)
-            /*
-            def __init__(self, voice, name, data):
-                self.voice = voice
-                self.name = name
-                super(AttrDict, self).__init__(data)
-            */
-        }
+        Voice connection;
 
         public void Delete()
         {
@@ -31,6 +18,7 @@ namespace SharpVoice
         public void Delete(bool trash)
         {
             //Moves this message to the Trash. Use message.delete(0) to move it out of the Trash.
+            throw new NotImplementedException();
         }
 
         public void Download()
@@ -41,6 +29,11 @@ namespace SharpVoice
         public void Download(string adir)
         {
             //Download the message MP3 (if any). Saves files to adir (defaults to current directory). Message hashes can be found in self.voicemail().messages for example. Returns location of saved file.
+            if (this.HasMp3 && connection != null)
+            {
+                connection.SaveVoicemail(this.ID, adir);
+            }
+            throw new NotImplementedException();
         }
 
         public void MarkRead()
@@ -51,7 +44,7 @@ namespace SharpVoice
         public void MarkRead(bool read)
         {
             //Mark this message as read. Use message.mark(0) to mark it as unread.
-            
+            throw new NotImplementedException();
         }
 
         public override string ToString()
@@ -62,10 +55,10 @@ namespace SharpVoice
         [DataMember(Name = "id")]
         public string ID { get; set; }
 
-        [DataMember]
+        [DataMember(Name = "phoneNumber")]
         public string phoneNumber { get; set; }
 
-        [DataMember]
+        [DataMember(Name = "displayNumber")]
         public string displayNumber { get; set; }
 
         [DataMember]
@@ -95,22 +88,22 @@ namespace SharpVoice
         [DataMember(Name = "star")]
         public bool Star { get; set; }
 
-        [DataMember]
-        public string messageText { get; set; }
+        [DataMember(Name = "messageText")]
+        public string Text { get; set; }
 
-        [DataMember]
-        public string[] labels { get; set; }
+        [DataMember(Name = "labels")]
+        public string[] Labels { get; set; }
 
-        [DataMember]
-        public bool hasMp3 { get; set; }
+        [DataMember(Name = "hasMp3")]
+        public bool HasMp3 { get; set; }
 
-        [DataMember]
-        public int duration { get; set; }
+        [DataMember(Name = "duration")]
+        public int Duration { get; set; }
 
         [DataMember]
         public string type { get; set; }
 
-        [DataMember]
-        public string children { get; set; }
+        [DataMember(Name = "children")]
+        public string Children { get; set; }
     }
 }
