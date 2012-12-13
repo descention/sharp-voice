@@ -8,6 +8,11 @@ namespace SharpVoice
     [DataContract]
     public class Message
     {
+        public enum Direction{
+            Incoming = 10,
+            Outgoing = 11
+        }
+
         Voice connection;
 
         public void Delete()
@@ -101,7 +106,7 @@ namespace SharpVoice
         public int Duration { get; set; }
 
         [DataMember]
-        public string type { get; set; }
+        public Direction type { get; set; }
 
         [DataMember(Name = "children")]
         public string Children { get; set; }
