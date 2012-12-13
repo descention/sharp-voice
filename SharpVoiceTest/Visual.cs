@@ -1,4 +1,4 @@
-﻿using System;
+ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -27,7 +27,7 @@ namespace GoogleTests
 
         private void callStart_Click(object sender, EventArgs e)
         {
-            string response = voiceConnection.call(callTo.Text, callFrom.Text);
+            string response = voiceConnection.Call(callTo.Text, callFrom.Text);
             MessageBox.Show(response);
         }
 
@@ -38,7 +38,7 @@ namespace GoogleTests
 
         private void smsSend_Click(object sender, EventArgs e)
         {
-            string response = voiceConnection.sendSMS(smsTo.Text, smsMsg.Text);
+            string response = voiceConnection.SendSMS(smsTo.Text, smsMsg.Text);
             MessageBox.Show(response);
         }
     }
