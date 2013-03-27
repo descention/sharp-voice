@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -250,12 +250,16 @@ namespace SharpVoice
         }
 
         public string Call(String callTo, String callFrom, String subscriberNumber){
+            string phoneType = "2";
+            if (callFrom == this.user) // call from google talk
+                phoneType = "9";
+                
             Dictionary<string, string> callData = new Dictionary<string, string>(){
                 {"outgoingNumber",callTo},
                 {"forwardingNumber",callFrom},
                 {"subscriberNumber",subscriberNumber},
                 {"remember","1"},
-                {"phoneType","2"}
+                {"phoneType",phoneType}
             };
 
             return this.Request("call", callData);
