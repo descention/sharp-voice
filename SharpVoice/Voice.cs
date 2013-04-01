@@ -234,7 +234,7 @@ namespace SharpVoice
         }
 		
         /// <summary>
-        /// Login with and email address and password.  Retrieve the auth and __rnr_se keys.
+        /// Login with email address and password.  Retrieve the _rnr_se key.
         /// </summary>
         public void Login(string pass, string smsPin, bool persist)
         {
