@@ -9,6 +9,7 @@ using System.Xml;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using System.Diagnostics;
+using System.Threading;
 
 namespace SharpVoice
 {
@@ -18,9 +19,7 @@ namespace SharpVoice
 	    String user = null;
 	    String pass = null;
 		private static CookieCollection cookies = new CookieCollection();
-        private static CookieContainer cookiejar = new CookieContainer();
-
-        
+        public static CookieContainer cookiejar = new CookieContainer();
 
         /*
 		 * Links Imported from https://pygooglevoice.googlecode.com/hg/googlevoice/settings.py
@@ -32,11 +31,13 @@ namespace SharpVoice
         //string[] FEEDS = new String[]{"inbox", "starred", "all", "spam", "trash", "voicemail", "sms",
         //        "recorded", "placed", "received", "missed"};
 
-		const string BASE = "https://www.google.com/voice/";
+        #region urls
+        const string BASE = "https://www.google.com/voice/";
         const string XML_RECENT = BASE + "inbox/recent/";
 
         public static Dictionary<string, string> dict = new Dictionary<string, string>(){
             {"BASE","https://www.google.com/voice/"},
+            {"LOGIN","https://accounts.google.com/ServiceLogin?service=grandcentral"},
             {"RNRSE","https://accounts.google.com/ServiceLogin?service=grandcentral&continue=https://www.google.com/voice/&followup=https://www.google.com/voice/&ltmpl=open"},
             {"LOGOUT",BASE + "account/signout"},
     		{"INBOX",BASE + "#inbox"},
@@ -62,22 +63,47 @@ namespace SharpVoice
     		{"XML_RECORDED",XML_RECENT + "recorded/"},
     		{"XML_PLACED",XML_RECENT + "placed/"},
     		{"XML_RECEIVED",XML_RECENT + "received/"},
-    		{"XML_MISSED",XML_RECENT + "missed/"}
+    		{"XML_MISSED",XML_RECENT + "missed/"},
+            {"SMSAUTH","https://accounts.google.com/SmsAuth?service=grandcentral"}
         };
+        #endregion
 
         /// <summary>
-        /// Login with email address and password
+        /// Login with email address and password. No persist. No pin.
         /// </summary>
         /// <param name="user">Email address for account</param>
         /// <param name="pass">Password for account</param>
-		public Voice(string user, string pass)
-		{
-            if (!string.IsNullOrEmpty(rnrSEE))
-                Logout();
-			this.user = user;
-			this.pass = pass;
-            this.Login();
-		}
+        public Voice(string user, string pass) : this(user, pass, false, "") { }
+
+        /// <summary>
+        /// Login with email, password, and persist. No pin.
+        /// </summary>
+        /// <param name="user">Email address for account</param>
+        /// <param name="pass">Password for account</param>
+        /// <param name="persist">Should we stay logged in?</param>
+        public Voice(string user, string pass, bool persist) : this(user, pass, persist, "") { }
+
+        /// <summary>
+        /// Login with email, password, and 2-factor authentication pin. No persist.
+        /// </summary>
+        /// <param name="user">Email address for account</param>
+        /// <param name="pass">Password for account</param>
+        /// <param name="pin">2-factor auth code (6-8 digits)</param>
+        public Voice(string user, string pass, string pin) : this(user, pass, false, pin) { }
+
+        /// <summary>
+        /// Login with email, password, persist, and 2-factor authentication pin.
+        /// </summary>
+        /// <param name="user">Email address for account</param>
+        /// <param name="pass">Password for account</param>
+        /// <param name="persist">Should we stay logged in?</param>
+        /// <param name="pin">2-factor auth code (6-8 digits)</param>
+        public Voice(string user, string pass, bool persist, string pin )
+        {
+            this.user = user;
+            
+            Login(pass, pin, persist);
+        }
 		
 		~Voice(){
 			Logout();
@@ -117,6 +143,9 @@ namespace SharpVoice
 
                     _inbox = JsonConvert.DeserializeObject<Folder>(json);
                     _inbox.LastUpdate = DateTime.Now;
+                    _inbox.voiceConnection = this;
+                    foreach (Message m in _inbox.Messages)
+                        m.connection = this;
                 }
                 return _inbox;
             }
@@ -165,9 +194,15 @@ namespace SharpVoice
             }
         }
 
+        
 		#endregion
 
-		private Dictionary<string,string> get_post_vars()
+        private static Dictionary<string, string> get_post_vars()
+        {
+            return get_post_vars(null);
+        }
+
+		private static Dictionary<string,string> get_post_vars(ICollection<string> names)
         {
             Dictionary<string,string> Post_Vars = new Dictionary<string,string>(){};
             string response = Request("base");
@@ -191,7 +226,7 @@ namespace SharpVoice
                 name = name.Remove(name.Length - 1, 1);
                 value = value.Remove(value.Length - 1, 1);
                 */
-                if (!Post_Vars.ContainsKey(name))
+                if (!Post_Vars.ContainsKey(name) && (names == null || names.Contains(name)))
                     Post_Vars.Add(name, value);
             }
 
@@ -201,15 +236,26 @@ namespace SharpVoice
         /// <summary>
         /// Login with and email address and password.  Retrieve the auth and __rnr_se keys.
         /// </summary>
-        private void Login(){
+        public void Login(string pass, string smsPin, bool persist)
+        {
             Debug.WriteLine("get:Login");
             if (user == null)
-				throw new InvalidOperationException("No email defined");
+                throw new InvalidOperationException("No email defined");
             if (pass == null)
                 throw new InvalidOperationException("No password defined");
-            
-            Dictionary<string, string> loginData = get_post_vars();
-            
+
+            Dictionary<string, string> loginData = get_post_vars(new string[]{"GALX","_rnr_se"});
+
+            if(persist && loginData.ContainsKey("_rnr_se")){
+                rnrSEE = loginData["_rnr_se"];
+                return;
+            }
+            else if (loginData.ContainsKey("_rnr_se") && !persist)
+            {
+                Logout();
+                loginData = get_post_vars();
+            }
+
             if (loginData.ContainsKey("Email"))
                 loginData["Email"] = user;
             else
@@ -219,14 +265,33 @@ namespace SharpVoice
                 loginData["Passwd"] = pass;
             else
                 loginData.Add("Passwd", pass);
-            
-            rnrSEE = get_rnrse(Request("rnrse",loginData));
-			
-			if (string.IsNullOrEmpty(rnrSEE))
-			{
-				throw new Exception("Could not login");
-			}
-	    }
+
+            string loginResponse = Request("rnrse", loginData);
+
+            if (Regex.Match(loginResponse, "smsUserPin").Success)
+            {
+                Dictionary<string, string> smsAuthData = new Dictionary<string, string>() { 
+                    {"smsUserPin", smsPin },
+                    {"smsVerifyPin","Verify"},
+                    {"exp","smsauthnojs"},
+                    {"PersistantCookie",persist?"yes":"no"}
+                };
+
+                string smsResponse = Request("smsauth",smsAuthData);
+                string smsToken = Regex.Match(smsResponse, "name=\"smsToken\"[ ]+value=\"([^\"]+)\"").Groups[1].Value;
+                Debug.WriteLine("smsToken:" + smsToken);
+                loginData = get_post_vars(new string[] { "GALX", "smsToken"});
+                loginData.Add("smsToken", smsToken);
+                loginResponse = Request("rnrse", loginData);
+            }
+
+            rnrSEE = get_rnrse(loginResponse);
+
+            if (string.IsNullOrEmpty(rnrSEE))
+            {
+                throw new Exception("Could not login");
+            }
+        }
 
         /// <summary>
         /// Deauth oneself with this method.
@@ -236,30 +301,58 @@ namespace SharpVoice
             Debug.WriteLine("get:Logout");
 			Request("logout");
 			rnrSEE = null;
+
 		}
 		
 		private string get_rnrse(string t)
         {
             t = t.Replace("\n", "");
             Match m = Regex.Match(t, "<input.*?name=[\'\"]_rnr_se[\'\"].*?(value=[\'\"](.*?)[\'\"]|/>)");
-            return m.Groups[2].ToString().Trim();
+            if (m.Success)
+                return m.Groups[2].ToString().Trim();
+            return "";
         }
 
+        public void SmsUserPin(string pin)
+        {
+
+        }
+
+        /// <summary>
+        /// Initiate call.
+        /// </summary>
+        /// <param name="callTo">Phone number to call</param>
+        /// <param name="callFrom">Phone you are calling from or your email (for gtalk)</param>
+        /// <returns>json string</returns>
         public string Call(string callTo, string callFrom){
             return Call(callTo, callFrom, "undefined");
         }
 
-        public string Call(String callTo, String callFrom, String subscriberNumber){
+        public string Call(string callTo, string callFrom, PhoneType phoneType)
+        {
+            return Call(callTo, callFrom, "undefined", phoneType);
+        }
+
+        public string Call(string callTo, string callFrom, string subscriberNumber){
+            PhoneType phoneType = PhoneType.mobile; // default
+            if (callFrom == this.user) // call from google talk
+                phoneType = PhoneType.gtalk;
+
+            return Call(callTo, callFrom, subscriberNumber, phoneType);
+	    }
+
+        public string Call(string callTo, string callFrom, string subscriberNumber, PhoneType phoneType)
+        {
             Dictionary<string, string> callData = new Dictionary<string, string>(){
                 {"outgoingNumber",callTo},
                 {"forwardingNumber",callFrom},
                 {"subscriberNumber",subscriberNumber},
-                {"remember","1"},
-                {"phoneType","2"}
+                {"remember","0"},
+                {"phoneType",((int)phoneType).ToString()}
             };
 
-            return this.Request("call", callData);
-	    }
+            return Request("call", callData);
+        }
 
         public string SendSMS(String destinationNumber, String txt){
 		    
@@ -269,17 +362,17 @@ namespace SharpVoice
                 {"text",txt}
             };
 			
-            return this.Request("sms", smsData);
+            return Request("sms", smsData);
 	    }
-		
-		public string markRead(string msgID, bool read){
+
+		public static string MarkRead(string msgID, bool read){
 			Dictionary<string,string> data = new Dictionary<string, string>();
-			data.Add("_msgID", msgID);
+			data.Add("msgID", msgID);
 			data.Add("read", read.ToString());
-			return this.Request("mark",data);
+			return Request("mark",data);
 		}
 
-        internal object makeRequest(String page, object data)
+        private static object makeRequest(String page, object data)
         {
             Debug.WriteLine("request:" + page);
             string url = dict[page.ToUpper()];
@@ -302,8 +395,8 @@ namespace SharpVoice
                 {
                     if (data is Dictionary<string, string>)
                     {
-                        Dictionary<string,string> dicdata = (Dictionary<string,string>)data;
-                        //Dictionary<string, string> temp = new Dictionary<string, string>();
+                        Dictionary<string, string> dicdata = data as Dictionary<string, string>;
+                        
                         if(!string.IsNullOrEmpty(rnrSEE))
                         	dicdata.Add("_rnr_se", rnrSEE);
                         
@@ -312,11 +405,12 @@ namespace SharpVoice
                             dataString += h.Key + "=" + HttpUtility.UrlEncode(h.Value, Encoding.UTF8);
                             dataString += "&";
                         }
-                        dataString.TrimEnd(new char[] { '&' });
+                        dataString = dataString.TrimEnd(new char[] { '&' });
                         request.Method = "POST";
-                        request.ContentType = "application/x-www-form-urlencoded;charset=utf-8";
+                        
                         request.ContentLength = dataString.Length;
                     }
+                    request.ContentType = "application/x-www-form-urlencoded;charset=utf-8";
                 }
                 
                 if (request.ContentLength > 0)
@@ -362,20 +456,21 @@ namespace SharpVoice
             }
         }
         
-        public string Request(string page){
+        public static string Request(string page){
         	return Request(page, null);
         }
         
-        public string Request(string page, object data){
+        public static string Request(string page, object data){
         	return (string)makeRequest(page,data);
         }
 
-        public byte[] Download(string page, object data){
+        public static byte[] Download(string page, object data){
             return (byte[])makeRequest(page,data);
         }
         
-		public void SaveVoicemail(string voiceID, string location){
+		public static string SaveVoicemail(string voiceID, string location){
 			File.WriteAllBytes(location,Download("download", voiceID));
+            return location;
 		}
 
 

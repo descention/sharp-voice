@@ -44,6 +44,9 @@
             this.smsTo = new System.Windows.Forms.TextBox();
             this.listView1 = new System.Windows.Forms.ListView();
             this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
+            this.maskedTextBox1 = new System.Windows.Forms.MaskedTextBox();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.label3 = new System.Windows.Forms.Label();
             this.callGroup.SuspendLayout();
             this.smsGroup.SuspendLayout();
             this.SuspendLayout();
@@ -79,7 +82,7 @@
             this.callGroup.Controls.Add(this.callFrom);
             this.callGroup.Controls.Add(this.callTo);
             this.callGroup.Enabled = false;
-            this.callGroup.Location = new System.Drawing.Point(12, 76);
+            this.callGroup.Location = new System.Drawing.Point(12, 120);
             this.callGroup.Name = "callGroup";
             this.callGroup.Size = new System.Drawing.Size(268, 75);
             this.callGroup.TabIndex = 3;
@@ -137,7 +140,7 @@
             this.smsGroup.Controls.Add(this.smsMsg);
             this.smsGroup.Controls.Add(this.smsTo);
             this.smsGroup.Enabled = false;
-            this.smsGroup.Location = new System.Drawing.Point(13, 158);
+            this.smsGroup.Location = new System.Drawing.Point(13, 201);
             this.smsGroup.Name = "smsGroup";
             this.smsGroup.Size = new System.Drawing.Size(267, 100);
             this.smsGroup.TabIndex = 6;
@@ -182,20 +185,53 @@
             // 
             // listView1
             // 
+            this.listView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1});
             this.listView1.Location = new System.Drawing.Point(286, 12);
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(278, 246);
+            this.listView1.Size = new System.Drawing.Size(278, 289);
             this.listView1.TabIndex = 7;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
+            // 
+            // maskedTextBox1
+            // 
+            this.maskedTextBox1.Location = new System.Drawing.Point(65, 76);
+            this.maskedTextBox1.Name = "maskedTextBox1";
+            this.maskedTextBox1.PasswordChar = '*';
+            this.maskedTextBox1.Size = new System.Drawing.Size(123, 20);
+            this.maskedTextBox1.TabIndex = 8;
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(199, 79);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(82, 17);
+            this.checkBox1.TabIndex = 9;
+            this.checkBox1.Text = "Persist Auth";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(12, 79);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(25, 13);
+            this.label3.TabIndex = 10;
+            this.label3.Text = "PIN";
             // 
             // Visual
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(576, 270);
+            this.ClientSize = new System.Drawing.Size(576, 313);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.checkBox1);
+            this.Controls.Add(this.maskedTextBox1);
             this.Controls.Add(this.listView1);
             this.Controls.Add(this.smsGroup);
             this.Controls.Add(this.label2);
@@ -233,5 +269,8 @@
         private System.Windows.Forms.TextBox smsTo;
         private System.Windows.Forms.ListView listView1;
         private System.Windows.Forms.ColumnHeader columnHeader1;
+        private System.Windows.Forms.MaskedTextBox maskedTextBox1;
+        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.Label label3;
     }
 }

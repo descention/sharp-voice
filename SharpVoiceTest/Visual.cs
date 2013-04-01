@@ -1,4 +1,4 @@
- using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -30,7 +30,7 @@ namespace GoogleTests
                 foreach (SharpVoice.Message msg in inbox.Messages)
                 {
                     ListViewItem item = new ListViewItem(listView1.Groups[Folder.SMS]);
-                    item.Text = msg.displayNumber;
+                    item.Text = msg.DisplayNumber;
                     listView1.Items.Add(item);
                 }
                 

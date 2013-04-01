@@ -6,6 +6,7 @@ using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using System.Collections;
 using System.Diagnostics;
+using System.Collections.Specialized;
 
 namespace SharpVoice
 {
@@ -18,6 +19,8 @@ namespace SharpVoice
         private const int CACHE_TIME = 5;
 
         DateTime _LastUpdate = DateTime.MinValue;
+
+        internal Voice voiceConnection;
 
         public DateTime LastUpdate
         {
@@ -44,13 +47,13 @@ namespace SharpVoice
             get
             {
                 Debug.WriteLine("get:Message index");
-                return Messages[index];
+                return MessageDict.Values.ElementAt(index);
             }
         }
 
         [DataMember(Name = "messages")]
-        private Dictionary<string, Message> MessageDict { get; set; }
-
+        private SortedDictionary<string, Message> MessageDict { get; set; }
+        
         public Message[] Messages
         {
             get

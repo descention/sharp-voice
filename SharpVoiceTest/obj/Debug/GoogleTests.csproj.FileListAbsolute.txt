@@ -25,3 +25,16 @@ C:\Users\Scott\Dropbox\Projects\sharp-voice\SharpVoiceTest\bin\Debug\SharpVoice.
 C:\Users\Scott\Dropbox\Projects\sharp-voice\SharpVoiceTest\bin\Debug\Newtonsoft.Json.pdb
 C:\Users\Scott\Dropbox\Projects\sharp-voice\SharpVoiceTest\bin\Debug\Newtonsoft.Json.xml
 C:\Users\Scott\Dropbox\Projects\sharp-voice\SharpVoiceTest\obj\Debug\GoogleTests.pdb
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoiceTest\obj\Debug\GoogleTests.exe
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoiceTest\obj\Debug\GoogleTests.pdb
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoiceTest\bin\Debug\GoogleTests.exe
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoiceTest\bin\Debug\GoogleTests.pdb
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoiceTest\bin\Debug\Newtonsoft.Json.dll
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoiceTest\bin\Debug\SharpVoice.dll
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoiceTest\bin\Debug\Newtonsoft.Json.pdb
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoiceTest\bin\Debug\Newtonsoft.Json.xml
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoiceTest\bin\Debug\SharpVoice.pdb
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoiceTest\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoiceTest\obj\Debug\GoogleTests.Properties.Resources.resources
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoiceTest\obj\Debug\GoogleTests.Visual.resources
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoiceTest\obj\Debug\GoogleTests.csproj.GenerateResource.Cache

@@ -8,12 +8,13 @@ namespace SharpVoice
     [DataContract]
     public class Message
     {
-        public enum Direction{
+        internal Voice connection;
+
+        public enum Direction
+        {
             Incoming = 10,
             Outgoing = 11
         }
-
-        Voice connection;
 
         public void Delete()
         {
@@ -26,19 +27,23 @@ namespace SharpVoice
             throw new NotImplementedException();
         }
 
-        public void Download()
+        public string Download()
         {
-            Download(Environment.CurrentDirectory);
+            return Download(System.IO.Path.Combine(Environment.CurrentDirectory, this.ID) + ".mp3");
         }
 
-        public void Download(string adir)
+        public string Download(string adir)
         {
             //Download the message MP3 (if any). Saves files to adir (defaults to current directory). Message hashes can be found in self.voicemail().messages for example. Returns location of saved file.
-            if (this.HasMp3 && connection != null)
+            if (this.HasMP3 && connection != null)
             {
-                connection.SaveVoicemail(this.ID, adir);
+                return Voice.SaveVoicemail(this.ID, adir);
             }
-            throw new NotImplementedException();
+            else if (!this.HasMP3)
+            {
+                throw new InvalidOperationException("No MP3 available");
+            }
+            return "";
         }
 
         public void MarkRead()
@@ -46,10 +51,14 @@ namespace SharpVoice
             MarkRead(true);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="connection">Voice object</param>
+        /// <param name="read">True = mark as read; False = mark as unread</param>
         public void MarkRead(bool read)
         {
-            //Mark this message as read. Use message.mark(0) to mark it as unread.
-            throw new NotImplementedException();
+            Voice.MarkRead(this.ID, read);
         }
 
         public override string ToString()
@@ -58,13 +67,16 @@ namespace SharpVoice
         }
 
         [DataMember(Name = "id")]
-        public string ID { get; set; }
+        internal string id { get; set; }
+        public string ID { get { return this.id; } }
 
         [DataMember(Name = "phoneNumber")]
         public string phoneNumber { get; set; }
 
         [DataMember(Name = "displayNumber")]
-        public string displayNumber { get; set; }
+        internal string displayNumber { get; set; }
+
+        public string DisplayNumber { get { return this.displayNumber; } }
 
         [DataMember]
         public string startTime { get; set; }
@@ -78,20 +90,32 @@ namespace SharpVoice
         [DataMember]
         public string relativeStartTime { get; set; }
 
-        [DataMember]
-        public string note { get; set; }
+        [DataMember(Name = "note")]
+        public string Note { get; set; }
 
-        [DataMember]
-        public bool isRead { get; set; }
+        [DataMember(Name = "isRead")]
+        public bool IsRead { get; set; }
 
-        [DataMember]
-        public bool isSpam { get; set; }
+        [DataMember(Name = "isSpam")]
+        public bool IsSpam { get; set; }
 
-        [DataMember]
-        public bool isTrash { get; set; }
+        [DataMember(Name = "isTrash")]
+        public bool IsTrash { get; set; }
 
         [DataMember(Name = "star")]
-        public bool Star { get; set; }
+        internal bool star { get; set; }
+        public bool Star
+        {
+            get { return this.star; }
+            set
+            {
+                Dictionary<string,string> data = new Dictionary<string,string>();
+                data.Add("messages",this.ID);
+                data.Add("star",value.ToString());
+                Voice.Request("star", data);
+                this.star = value;
+            }
+        }
 
         [DataMember(Name = "messageText")]
         public string Text { get; set; }
@@ -100,15 +124,19 @@ namespace SharpVoice
         public string[] Labels { get; set; }
 
         [DataMember(Name = "hasMp3")]
-        public bool HasMp3 { get; set; }
+        internal bool hasMp3 { get; set; }
+        public bool HasMP3 { get { return this.hasMp3; } }
 
         [DataMember(Name = "duration")]
-        public int Duration { get; set; }
+        internal int duration { get; set; }
+        public int Duration { get { return this.duration; } }
 
-        [DataMember]
-        public Direction type { get; set; }
+        [DataMember(Name = "type")]
+        internal Direction type { get; set; }
+        public Direction Type { get { return this.type; } }
 
         [DataMember(Name = "children")]
-        public string Children { get; set; }
+        internal string children { get; set; }
+        public string Children { get { return this.children; } }
     }
 }

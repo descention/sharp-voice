@@ -42,16 +42,26 @@ namespace SharpVoice
         public void Disable()
         {
             //disables phone
+            throw new NotImplementedException();
         }
 
         public void Enable()
         {
             //enables phone
+            throw new NotImplementedException();
         }
 
         public string toString()
         {
             return phoneNumber;
         }
+    }
+
+    public enum PhoneType
+    {
+        home = 1,
+        mobile = 2,
+        work = 3,
+        gtalk = 9
     }
 }

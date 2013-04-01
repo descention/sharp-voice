@@ -14,3 +14,11 @@ C:\Users\Scott\Dropbox\Projects\sharp-voice\SharpVoice\bin\Debug\Newtonsoft.Json
 C:\Users\Scott\Dropbox\Projects\sharp-voice\SharpVoice\bin\Debug\Newtonsoft.Json.pdb
 C:\Users\Scott\Dropbox\Projects\sharp-voice\SharpVoice\bin\Debug\Newtonsoft.Json.xml
 C:\Users\Scott\Dropbox\Projects\sharp-voice\SharpVoice\obj\Debug\SharpVoice.pdb
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoice\bin\Debug\SharpVoice.dll
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoice\bin\Debug\SharpVoice.pdb
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoice\bin\Debug\Newtonsoft.Json.dll
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoice\bin\Debug\Newtonsoft.Json.pdb
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoice\bin\Debug\Newtonsoft.Json.xml
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoice\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoice\obj\Debug\SharpVoice.dll
+C:\Users\smundorff\Dropbox\Projects\sharp-voice\SharpVoice\obj\Debug\SharpVoice.pdb
