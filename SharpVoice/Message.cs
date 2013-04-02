@@ -80,7 +80,6 @@ namespace SharpVoice
 
         [DataMember(Name = "displayNumber")]
         internal string displayNumber { get; set; }
-
         public string DisplayNumber { get { return this.displayNumber; } }
 
         [DataMember]
@@ -92,14 +91,26 @@ namespace SharpVoice
         [DataMember]
         public string displayStartTime { get; set; }
 
-        [DataMember]
+        [DataMember(Name = "relativeStartTime")]
         public string relativeStartTime { get; set; }
 
         [DataMember(Name = "note")]
         public string Note { get; set; }
 
         [DataMember(Name = "isRead")]
-        public bool IsRead { get; set; }
+        private bool isRead { get; set; }
+        public bool IsRead
+        {
+            get { return this.isRead; }
+            set
+            {
+                Dictionary<string, string> data = new Dictionary<string, string>();
+                data.Add("messages", this.ID);
+                data.Add("read", value ? "1" : "0");
+                Voice.Request("mark", data);
+                this.isRead = value;
+            }
+        }
 
         [DataMember(Name = "isSpam")]
         public bool IsSpam { get; set; }
@@ -116,7 +127,7 @@ namespace SharpVoice
             {
                 Dictionary<string,string> data = new Dictionary<string,string>();
                 data.Add("messages",this.ID);
-                data.Add("star",value.ToString());
+                data.Add("star", value ? "1" : "0");
                 Voice.Request("star", data);
                 this.star = value;
             }

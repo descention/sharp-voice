@@ -72,8 +72,7 @@ namespace GoogleTests
                 */
 
                 foreach (SharpVoice.Message m in v.Inbox.Messages)
-                    if(!m.IsRead)
-                        m.MarkRead();
+                    m.Archive(true);
 
                 using (Stream s = File.Create(cookieData))
                     formatter.Serialize(s, Voice.cookiejar);

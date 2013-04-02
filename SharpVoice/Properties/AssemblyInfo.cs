@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("SharpVoice")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("PRIMUS Technologies Corp.")]
+[assembly: AssemblyCompany("Scott Mundorff")]
 [assembly: AssemblyProduct("SharpVoice")]
-[assembly: AssemblyCopyright("Copyright © PRIMUS Technologies Corp. 2012")]
+[assembly: AssemblyCopyright("Copyright © Scott Mundorff 2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

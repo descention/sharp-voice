@@ -16,7 +16,7 @@ namespace SharpVoice
         /// <summary>
         /// Seconds to cache data
         /// </summary>
-        private const int CACHE_TIME = 5;
+        private const int CACHE_TIME = 10;
 
         DateTime _LastUpdate = DateTime.MinValue;
 
@@ -39,6 +39,10 @@ namespace SharpVoice
             {
                 Debug.WriteLine("get:Message id");
                 return MessageDict[id];
+            }
+            set
+            {
+                MessageDict[id] = value;
             }
         }
 
@@ -77,5 +81,14 @@ namespace SharpVoice
         public const string INBOX = "inbox";
         public const string SMS = "sms";
         public const string VOICEMAIL = "voicemail";
+    }
+
+    enum FolderType
+    {
+        All,
+        Unread,
+        Inbox,
+        SMS,
+        Voicemail
     }
 }

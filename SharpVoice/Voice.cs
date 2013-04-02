@@ -125,76 +125,155 @@ namespace SharpVoice
 		*/
 
 		#region java translated functions
-        private String getInbox(){
-            return Request("xml_inbox");
+        private string getInbox()
+        {
+            return getInbox(1);
+        }
+
+        private string getInbox(int page){
+            return Request(dict["XML_INBOX"]+"?page=p" + page);
 	    }
 
-        Folder _inbox;
+        public string getStarred()
+        {
+            return getStarred(1);
+        }
+	    public string getStarred(int page){
+            return Request(dict["XML_STARRED"] + "?page=p" + page);
+	    }
+        public string getRecent(int page)
+        {
+            return Request(dict["XML_ALL"] + "?page=p" + page);
+	    }
+        public String getSpam(int page)
+        {
+        	return Request(dict["XML_SPAM"] + "?page=p" + page);
+	    }
+        public String getRecorded(int page)
+        {
+            return Request(dict["XML_RECORDED"] + "?page=p" + page);
+	    }
+        public String getPlaced(int page)
+        {
+            return Request(dict["XML_PLACED"] + "?page=p" + page);
+	    }
+        public String getReceived(int page)
+        {
+            return Request(dict["XML_RECEIVED"] + "?page=p" + page);
+	    }
+        public String getMissed(int page)
+        {
+            return Request(dict["XML_MISSED"] + "?page=p" + page);
+	    }
+        private String getSMS(int page)
+        {
+            return Request(dict["XML_SMS"] + "?page=p" + page);
+	    }
+        private string getAll(int page)
+        {
+            return Request(dict["XML_ALL"] + "?page=p" + page);
+        }
+        private string getVoicemail(int page)
+        {
+            return Request(dict["XML_VOICEMAIL"] + "?page=p" + page);
+        }
 
+        Folder _all;
+        public Folder All
+        {
+            get
+            {
+                if (_all == null || _all.NeedsUpdate)
+                    _all = buildFolder(FolderType.All);
+                return _all;
+            }
+        }
+
+        Folder _inbox;
         public Folder Inbox
         {
             get
             {
                 if (_inbox == null || _inbox.NeedsUpdate)
-                {
-                    string inbox = this.getInbox();
-                    XmlDocument xd = new XmlDocument();
-                    xd.LoadXml(inbox);
-                    string json = xd.SelectSingleNode("//response/json").InnerText;
-
-                    _inbox = JsonConvert.DeserializeObject<Folder>(json);
-                    _inbox.LastUpdate = DateTime.Now;
-                    _inbox.voiceConnection = this;
-                    foreach (Message m in _inbox.Messages)
-                        m.connection = this;
-                }
+                    _inbox = buildFolder(FolderType.Inbox);
                 return _inbox;
             }
         }
 
-	    public String getStarred(){
-            return Request("XML_STARRED");
-	    }
-	    public String getRecent(){
-            return Request("XML_ALL");
-	    }
-	    public String getSpam(){
-        	return Request("XML_SPAM");
-	    }
-	    public String getRecorded(){
-            return Request("XML_RECORDED");
-	    }
-	    public String getPlaced(){
-            return Request("XML_PLACED");
-	    }
-	    public String getReceived(){
-            return Request("XML_RECEIVED");
-	    }
-	    public String getMissed(){
-            return Request("XML_MISSED");
-	    }
-	    private String getSMS(){
-            return Request("XML_SMS");
-	    }
-
         Folder _sms;
-
         public Folder SMS
         {
             get
             {
                 if (_sms == null || _sms.NeedsUpdate)
-                {
-                    string box = this.getSMS();
-                    XmlDocument xd = new XmlDocument();
-                    xd.LoadXml(box);
-                    string json = xd.SelectSingleNode("//response/json").InnerText;
-                    _sms = JsonConvert.DeserializeObject<Folder>(json);
-                }
+                    _sms = buildFolder(FolderType.SMS);
                 return _sms;
             }
         }
 
+        Folder _voicemail;
+        public Folder Voicemail
+        {
+            get
+            {
+                if (_voicemail == null || _voicemail.NeedsUpdate)
+                    _voicemail = buildFolder(FolderType.Voicemail);
+                return _voicemail;
+            }
+        }
+
+        /// <summary>
+        /// Iterate through pages of xml to pull all messages for folder
+        /// </summary>
+        /// <param name="t">Folder type (All, Inbox, SMS, Unread, or Voicemail)</param>
+        /// <returns>Folder for specified type</returns>
+        private Folder buildFolder(FolderType t)
+        {
+            Folder tmp, returnFolder = null;
+            int page = 0;
+            do
+            {
+                page++;
+                string xml = "";
+                switch (t)
+                {
+                    case FolderType.All:
+                        xml = this.getAll(page);
+                        break;
+                    case FolderType.Inbox:
+                        xml = this.getInbox(page);
+                        break;
+                    case FolderType.SMS:
+                        xml = this.getSMS(page);
+                        break;
+                    case FolderType.Unread:
+                        throw new NotImplementedException();
+                        break;
+                    case FolderType.Voicemail:
+                        xml = this.getVoicemail(page);
+                        break;
+                    default:
+                        xml = this.getInbox(page);
+                        break;
+                }
+                XmlDocument xd = new XmlDocument();
+                xd.LoadXml(xml);
+                string json = xd.SelectSingleNode("//response/json").InnerText;
+                tmp = JsonConvert.DeserializeObject<Folder>(json);
+
+                if (page == 1)
+                    returnFolder = tmp;
+                else
+                    foreach (Message m in tmp.Messages)
+                        returnFolder[m.ID] = m;
+            } while (tmp.Messages.Length >= returnFolder.ResultsPerPage);
+
+            returnFolder.LastUpdate = DateTime.Now;
+            returnFolder.voiceConnection = this;
+            foreach (Message m in returnFolder.Messages)
+                m.connection = this;
+            return returnFolder;
+        }
         
 		#endregion
 
@@ -381,10 +460,16 @@ namespace SharpVoice
             return Request("archive", data);
         }
 
-        private static object makeRequest(String page, object data)
+        private static object makeRequest(string page, object data)
         {
             Debug.WriteLine("request:" + page);
-            string url = dict[page.ToUpper()];
+            
+            string url = "";
+            if (dict.ContainsKey(page.ToUpper()))
+                url = dict[page.ToUpper()];
+            else
+                url = page;
+            
             string dataString = "";
             
             if(data is string){
