@@ -45,6 +45,7 @@ namespace SharpVoice
     		{"CANCEL",BASE + "call/cancel/"},
     		{"DEFAULT_FORWARD",BASE + "settings/editDefaultForwarding/"},
     		{"FORWARD",BASE + "settings/editForwarding/"},
+            {"ARCHIVE", BASE + "inbox/archiveMessages/"},
     		{"DELETE",BASE + "inbox/deleteMessages/"},
     		{"MARK",BASE + "inbox/mark/"},
     		{"STAR",BASE + "inbox/star/"},
@@ -367,10 +368,18 @@ namespace SharpVoice
 
 		public static string MarkRead(string msgID, bool read){
 			Dictionary<string,string> data = new Dictionary<string, string>();
-			data.Add("msgID", msgID);
-			data.Add("read", read.ToString());
+			data.Add("messages", msgID);
+			data.Add("read", read?"1":"0");
 			return Request("mark",data);
 		}
+
+        public static string Archive(string msgID, bool archive)
+        {
+            Dictionary<string, string> data = new Dictionary<string, string>();
+            data.Add("messages", msgID);
+            data.Add("archive", archive ? "1" : "0");
+            return Request("archive", data);
+        }
 
         private static object makeRequest(String page, object data)
         {

@@ -62,12 +62,18 @@ namespace GoogleTests
                 {
                     v = new Voice(email, password, true, smsPin);
                 }
-
+                
+                /*
                 Console.Write("To (phone #): ");
                 string to = Console.ReadLine();
                 Console.Write("Message: ");
                 string msg = Console.ReadLine();
                 v.SendSMS(to, msg);
+                */
+
+                foreach (SharpVoice.Message m in v.Inbox.Messages)
+                    if(!m.IsRead)
+                        m.MarkRead();
 
                 using (Stream s = File.Create(cookieData))
                     formatter.Serialize(s, Voice.cookiejar);

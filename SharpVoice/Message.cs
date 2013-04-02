@@ -16,6 +16,11 @@ namespace SharpVoice
             Outgoing = 11
         }
 
+        public void Archive(bool archive)
+        {
+            Voice.Archive(this.ID, archive);
+        }
+
         public void Delete()
         {
             Delete(true);
